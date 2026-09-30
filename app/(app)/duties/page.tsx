@@ -1,12 +1,11 @@
 import { DutiesView } from "@/components/duties-view";
 import { canEditSubunit, requireViewer } from "@/lib/authz";
-import { getCoy, loadSnapshot } from "@/lib/data/snapshot";
+import { currentSnapshot } from "@/lib/data/current";
 import { currentCaa, indexCamps, servingCampId, validate } from "@/lib/parade";
 
 export default async function DutiesPage({ searchParams }: PageProps<"/duties">) {
   const { duty: openDutyId } = await searchParams;
-  const viewer = await requireViewer();
-  const snapshot = await loadSnapshot(await getCoy());
+  const [viewer, snapshot] = await Promise.all([requireViewer(), currentSnapshot()]);
   const caa = currentCaa();
   const idx = indexCamps(snapshot);
 

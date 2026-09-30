@@ -4,26 +4,27 @@ import Link from "next/link";
 import { StrengthBar } from "@/components/strength-bar";
 import { Card } from "@/components/ui/card";
 import { requireViewer } from "@/lib/authz";
-import { getCoy, loadSnapshot } from "@/lib/data/snapshot";
+import { currentSnapshot } from "@/lib/data/current";
 import { db } from "@/lib/db";
 import { paradeState, user } from "@/lib/db/schema";
 import { computeCoy, currentCaa, ddmmyy, validate } from "@/lib/parade";
 import { formatSgt } from "@/lib/format";
 
 export default async function OverviewPage() {
-  const viewer = await requireViewer();
-  const coyRow = await getCoy();
-  const snapshot = await loadSnapshot(coyRow);
+  const [viewer, snapshot, [lastSent]] = await Promise.all([
+    requireViewer(),
+    currentSnapshot(),
+    db
+      .select({ sentAt: paradeState.sentAt, caaDate: paradeState.caaDate, caaTime: paradeState.caaTime, by: user.name })
+      .from(paradeState)
+      .leftJoin(user, eq(user.id, paradeState.sentBy))
+      .where(isNotNull(paradeState.sentAt))
+      .orderBy(desc(paradeState.sentAt))
+      .limit(1),
+  ]);
   const caa = currentCaa();
   const state = computeCoy(snapshot);
   const issues = validate(snapshot, caa);
-  const [lastSent] = await db
-    .select({ sentAt: paradeState.sentAt, caaDate: paradeState.caaDate, caaTime: paradeState.caaTime, by: user.name })
-    .from(paradeState)
-    .leftJoin(user, eq(user.id, paradeState.sentBy))
-    .where(isNotNull(paradeState.sentAt))
-    .orderBy(desc(paradeState.sentAt))
-    .limit(1);
 
   const issuesBySubunit = new Map<string, number>();
   for (const i of issues) issuesBySubunit.set(i.scope[0], (issuesBySubunit.get(i.scope[0]) ?? 0) + 1);

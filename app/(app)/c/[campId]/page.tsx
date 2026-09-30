@@ -4,14 +4,13 @@ import { notFound } from "next/navigation";
 import { CampRoster } from "@/components/camp-roster";
 import { canEditSubunit, requireViewer } from "@/lib/authz";
 import { getReasonSuggestions } from "@/lib/data/reasons";
-import { getCoy, loadSnapshot } from "@/lib/data/snapshot";
+import { currentSnapshot } from "@/lib/data/current";
 import { computeCoy, currentCaa, validate } from "@/lib/parade";
 
 export default async function CampPage({ params, searchParams }: PageProps<"/c/[campId]">) {
   const { campId } = await params;
   const { person } = await searchParams;
-  const viewer = await requireViewer();
-  const snapshot = await loadSnapshot(await getCoy());
+  const [viewer, snapshot, reasons] = await Promise.all([requireViewer(), currentSnapshot(), getReasonSuggestions()]);
   const caa = currentCaa();
 
   const sub = computeCoy(snapshot).subunits.find((s) => s.camps.some((c) => c.camp.id === campId));
@@ -42,7 +41,7 @@ export default async function CampPage({ params, searchParams }: PageProps<"/c/[
         issues={issues}
         duties={duties.map((d) => ({ id: d.id, type: d.type, rank: d.rank, name: d.name }))}
         canEdit={canEditSubunit(viewer, sub.subunit.id)}
-        reasons={await getReasonSuggestions()}
+        reasons={reasons}
         today={caa.date}
         openPersonId={typeof person === "string" ? person : null}
       />

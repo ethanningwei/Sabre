@@ -1,28 +1,31 @@
 import { desc, eq, isNotNull } from "drizzle-orm";
 import { ParadeGenerator } from "@/components/parade-generator";
 import { requireViewer } from "@/lib/authz";
-import { getCoy, loadSnapshot } from "@/lib/data/snapshot";
+import { currentCoy, currentSnapshot } from "@/lib/data/current";
 import { db } from "@/lib/db";
 import { paradeState, user } from "@/lib/db/schema";
 import { currentCaa, validate } from "@/lib/parade";
 
 export default async function ParadePage() {
-  const viewer = await requireViewer();
-  const coyRow = await getCoy();
   const caa = currentCaa();
-  const issues = validate(await loadSnapshot(coyRow), caa);
-  const recentSends = await db
-    .select({
-      caaDate: paradeState.caaDate,
-      caaTime: paradeState.caaTime,
-      sentAt: paradeState.sentAt,
-      by: user.name,
-    })
-    .from(paradeState)
-    .leftJoin(user, eq(user.id, paradeState.sentBy))
-    .where(isNotNull(paradeState.sentAt))
-    .orderBy(desc(paradeState.sentAt))
-    .limit(20);
+  const [viewer, coyRow, snapshot, recentSends] = await Promise.all([
+    requireViewer(),
+    currentCoy(),
+    currentSnapshot(),
+    db
+      .select({
+        caaDate: paradeState.caaDate,
+        caaTime: paradeState.caaTime,
+        sentAt: paradeState.sentAt,
+        by: user.name,
+      })
+      .from(paradeState)
+      .leftJoin(user, eq(user.id, paradeState.sentBy))
+      .where(isNotNull(paradeState.sentAt))
+      .orderBy(desc(paradeState.sentAt))
+      .limit(20),
+  ]);
+  const issues = validate(snapshot, caa);
 
   return (
     <ParadeGenerator

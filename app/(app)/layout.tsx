@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { requireViewer } from "@/lib/authz";
-import { getCoy } from "@/lib/data/snapshot";
+import { currentCoy } from "@/lib/data/current";
 import { BottomNav } from "@/components/bottom-nav";
 import { UserMenu } from "@/components/user-menu";
 import { Logo } from "@/components/logo";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
-  const viewer = await requireViewer();
-  const coyRow = await getCoy();
+  const [viewer, coyRow] = await Promise.all([requireViewer(), currentCoy()]);
 
   return (
     <div className="flex min-h-dvh flex-col">

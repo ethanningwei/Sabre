@@ -1,11 +1,10 @@
 import { AdminHeader } from "@/components/admin-header";
 import { SettingsForm } from "@/components/admin/settings-form";
 import { requireAdminPage } from "@/lib/authz";
-import { getCoy } from "@/lib/data/snapshot";
+import { currentCoy } from "@/lib/data/current";
 
 export default async function SettingsPage() {
-  await requireAdminPage();
-  const coyRow = await getCoy();
+  const [, coyRow] = await Promise.all([requireAdminPage(), currentCoy()]);
   return (
     <div className="flex flex-col gap-5">
       <AdminHeader title="Coy settings" />

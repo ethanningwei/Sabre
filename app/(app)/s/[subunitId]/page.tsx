@@ -5,13 +5,12 @@ import { ShiftToggle } from "@/components/shift-toggle";
 import { StrengthBar } from "@/components/strength-bar";
 import { Card } from "@/components/ui/card";
 import { canEditSubunit, requireViewer } from "@/lib/authz";
-import { getCoy, loadSnapshot } from "@/lib/data/snapshot";
+import { currentSnapshot } from "@/lib/data/current";
 import { computeCoy, currentCaa, validate } from "@/lib/parade";
 
 export default async function SubunitPage({ params }: PageProps<"/s/[subunitId]">) {
   const { subunitId } = await params;
-  const viewer = await requireViewer();
-  const snapshot = await loadSnapshot(await getCoy());
+  const [viewer, snapshot] = await Promise.all([requireViewer(), currentSnapshot()]);
   const state = computeCoy(snapshot).subunits.find((s) => s.subunit.id === subunitId);
   if (!state) notFound();
   const canEdit = canEditSubunit(viewer, subunitId);

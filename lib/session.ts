@@ -72,13 +72,20 @@ export async function startSession(name: string) {
   });
 }
 
-/** The signed-in user id, or null. Sessions die on expiry or when the password changes. */
-export async function sessionUserId(): Promise<string | null> {
+/**
+ * The signed-in user, or null — one query (session joined to user).
+ * Sessions die on expiry or when the password changes.
+ */
+export async function sessionUser(): Promise<typeof user.$inferSelect | null> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  const [row] = await db.select().from(appSession).where(eq(appSession.tokenHash, sha256(token)));
-  if (!row || row.expiresAt < new Date() || row.passwordTag !== passwordTag()) return null;
-  return row.userId;
+  const [row] = await db
+    .select({ s: appSession, u: user })
+    .from(appSession)
+    .innerJoin(user, eq(user.id, appSession.userId))
+    .where(eq(appSession.tokenHash, sha256(token)));
+  if (!row || row.s.expiresAt < new Date() || row.s.passwordTag !== passwordTag()) return null;
+  return row.u;
 }
 
 export async function endSession() {

@@ -3,8 +3,8 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { db } from "@/lib/db";
-import { camp, duty, person, user } from "@/lib/db/schema";
-import { sessionUserId } from "@/lib/session";
+import { camp, duty, person } from "@/lib/db/schema";
+import { sessionUser } from "@/lib/session";
 
 export type Role = "pending" | "guardcomm" | "admin";
 
@@ -24,9 +24,7 @@ export class ForbiddenError extends Error {
 
 /** The signed-in user, re-read from the DB so role/scope changes apply immediately. */
 export const getViewer = cache(async (): Promise<Viewer | null> => {
-  const userId = await sessionUserId();
-  if (!userId) return null;
-  const [row] = await db.select().from(user).where(eq(user.id, userId));
+  const row = await sessionUser();
   if (!row) return null;
   return { id: row.id, name: row.name, role: row.role, subunitId: row.subunitId, active: row.active };
 });

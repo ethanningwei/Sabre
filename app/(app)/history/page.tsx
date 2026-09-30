@@ -2,15 +2,14 @@ import { desc, eq } from "drizzle-orm";
 import { ChevronRight, Send } from "lucide-react";
 import Link from "next/link";
 import { requireViewer } from "@/lib/authz";
-import { getCoy } from "@/lib/data/snapshot";
+import { currentCoy } from "@/lib/data/current";
 import { db } from "@/lib/db";
 import { paradeState, user } from "@/lib/db/schema";
 import { formatSgt } from "@/lib/format";
 import { ddmmyy } from "@/lib/parade/time";
 
 export default async function HistoryPage() {
-  await requireViewer();
-  const coyRow = await getCoy();
+  const [, coyRow] = await Promise.all([requireViewer(), currentCoy()]);
   const rows = await db
     .select({
       id: paradeState.id,
