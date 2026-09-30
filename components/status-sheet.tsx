@@ -151,7 +151,7 @@ function StatusForm({
               "flex h-14 flex-col items-center justify-center rounded-xl border text-sm font-semibold transition-colors",
               status === s
                 ? s === "PRESENT"
-                  ? "border-present bg-present text-white"
+                  ? "border-present bg-present text-background"
                   : "border-absent bg-absent text-black"
                 : "bg-background hover:bg-muted",
             )}
@@ -248,7 +248,7 @@ function StatusForm({
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex min-w-0 flex-col gap-1.5">
       <Label className="text-xs text-muted-foreground">{label}</Label>
       {children}
     </div>

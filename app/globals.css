@@ -143,3 +143,31 @@
     @apply font-sans;
   }
 }
+/* iOS Safari gives date/time inputs an intrinsic minimum width and centres
+   their value, so they won't shrink inside a grid or flex row and spill into
+   the next field. Only iOS matches -webkit-touch-callout. */
+@supports (-webkit-touch-callout: none) {
+  input[type="date"],
+  input[type="time"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 0;
+    max-width: 100%;
+  }
+  input[type="date"]::-webkit-date-and-time-value,
+  input[type="time"]::-webkit-date-and-time-value {
+    text-align: left;
+  }
+}
+
+@layer base {
+  /* below 16px, iOS zooms the page when a field is tapped */
+  select {
+    font-size: 16px;
+  }
+  @media (min-width: 768px) {
+    select {
+      font-size: 0.875rem;
+    }
+  }
+}

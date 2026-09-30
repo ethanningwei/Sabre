@@ -245,6 +245,11 @@ export function CampRoster({
       )}
 
       {selecting && (
+        // lets the last rows scroll above the floating bar
+        <div aria-hidden className="h-20" />
+      )}
+
+      {selecting && (
         <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-40 px-4 pb-3">
           <div className="mx-auto flex max-w-2xl items-center gap-2 rounded-2xl border bg-popover p-2 shadow-lg">
             <span className="px-2 text-sm font-medium">{selected.size} selected</span>

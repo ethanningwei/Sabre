@@ -189,7 +189,7 @@ function EditForm({
       {editing.kind === "camp" && (
         <div className="flex flex-col gap-1.5">
           <Label className="text-xs text-muted-foreground">Subunit</Label>
-          <select value={subunitId} onChange={(e) => setSubunitId(e.target.value)} className="h-11 rounded-lg border bg-background px-3 text-sm">
+          <select value={subunitId} onChange={(e) => setSubunitId(e.target.value)} className="h-11 min-w-0 rounded-lg border bg-background px-3">
             {subunits.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}

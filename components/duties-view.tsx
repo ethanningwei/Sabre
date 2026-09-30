@@ -32,7 +32,7 @@ const DUTY_LABEL: Record<DutyType, string> = { EXTRA: "Extra", RF: "RF", SOL: "S
 const DUTY_HINT: Record<DutyType, string> = {
   EXTRA: "Serving extra at another camp. They're marked absent at their own team.",
   RF: "Reinforcing another camp. They're marked absent at their own team.",
-  SOL: "Stoppage of leave: stays in camp with their own team's camp while off shift.",
+  SOL: "Stoppage of leave: stays in camp while their own team is off shift.",
 };
 
 const toInput = (hhmm: string | null) => (hhmm ? `${hhmm.slice(0, 2)}:${hhmm.slice(2)}` : "");
@@ -270,7 +270,7 @@ function DutyForm({
               onClick={() => setType(t)}
               className={cn(
                 "h-12 rounded-xl border text-sm font-semibold transition-colors",
-                type === t ? "border-duty bg-duty text-white" : "bg-background hover:bg-muted",
+                type === t ? "border-duty bg-duty text-background" : "bg-background hover:bg-muted",
               )}
             >
               {DUTY_LABEL[t]}
@@ -358,7 +358,7 @@ function DutyForm({
         ) : null
       ) : (
         <Field label="Serving at">
-          <select value={campId} onChange={(e) => setCampId(e.target.value)} className="h-11 rounded-lg border bg-background px-3 text-sm">
+          <select value={campId} onChange={(e) => setCampId(e.target.value)} className="h-11 min-w-0 rounded-lg border bg-background px-3">
             <option value="">Choose a camp…</option>
             {campChoices.map((c) => (
               <option key={c.id} value={c.id}>
@@ -409,7 +409,7 @@ function DutyForm({
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex min-w-0 flex-col gap-1.5">
       <Label className="text-xs text-muted-foreground">{label}</Label>
       {children}
     </div>

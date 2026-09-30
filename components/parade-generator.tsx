@@ -108,12 +108,12 @@ export function ParadeGenerator({
         <p className="text-sm text-muted-foreground">Checks everything first. Only a clean state can be generated.</p>
       </div>
 
-      <div className="flex items-end gap-3 rounded-xl border bg-card p-3">
-        <div className="flex flex-1 flex-col gap-1.5">
+      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,7.5rem)] items-end gap-3 rounded-xl border bg-card p-3">
+        <div className="flex min-w-0 flex-col gap-1.5">
           <Label className="text-xs text-muted-foreground">CAA date</Label>
           <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-11" />
         </div>
-        <div className="flex w-28 flex-col gap-1.5">
+        <div className="flex min-w-0 flex-col gap-1.5">
           <Label className="text-xs text-muted-foreground">Time</Label>
           <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="h-11" />
         </div>

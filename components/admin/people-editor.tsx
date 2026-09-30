@@ -50,7 +50,7 @@ export function PeopleEditor({ camps, people }: { camps: Camp[]; people: Person[
         <select
           value={campFilter}
           onChange={(e) => setCampFilter(e.target.value)}
-          className="h-10 min-w-0 flex-1 rounded-lg border bg-background px-3 text-sm"
+          className="h-10 min-w-0 flex-1 rounded-lg border bg-background px-3"
         >
           <option value="all">All camps</option>
           {camps.map((c) => (
@@ -142,7 +142,7 @@ function PersonForm({
       </div>
       <div className="flex flex-col gap-1.5">
         <Label className="text-xs text-muted-foreground">Camp</Label>
-        <select value={campId} onChange={(e) => setCampId(e.target.value)} className="h-11 rounded-lg border bg-background px-3 text-sm">
+        <select value={campId} onChange={(e) => setCampId(e.target.value)} className="h-11 min-w-0 rounded-lg border bg-background px-3">
           {camps.map((c) => (
             <option key={c.id} value={c.id}>
               {c.subunit} › {c.name}
