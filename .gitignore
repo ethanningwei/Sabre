@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# personal data / secrets — never commit
+credentials.json
+*.export.json
+sabre-export.json
+/data/private/
+__pycache__/

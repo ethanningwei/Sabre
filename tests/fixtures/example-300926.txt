@@ -1,0 +1,222 @@
+Sabre Parade State
+
+CAA: 300926 1100H
+
+Total Strength: 131/214
+COY HQ: 12/15
+PLATOON 5: 31/62
+PLATOON 6: 42/49
+PLATOON 7: 23/39
+PLATOON 8: 23/49
+——————————————— 
+
+COY HQ
+• Total Strength: 15
+• Present Strength: 12
+
+• Absentees (MC, AL, etc): 03
+
+1. 3SG RUI HENG (OL 250926 - 041026)
+
+2. LTA NICHOLAS (RF BDK (300926 - 300926))
+
+3. 3SG ETHAN TEO (RF BDK (280926 - 300926))
+——————————————— 
+
+PLATOON 5
+• Total strength: 62
+• Present strength: 31
+
+SFT A
+• Total Strength: 22
+• Present Strength: 00
+• Off Shift: 22
+
+SFT B
+• Total Strength: 22
+• Present Strength: 15 + 01 SOL
+• Off Shift: 00
+
+Serving SOL: 01
+
+1. PTE HAOYANG (250926 - 081026)
+
+• Absentees (MC, AL, etc): 07
+
+1. LCP PARTHIV (MP60 )
+
+2. PTE ABU BAKAR (MP60)
+
+3. PTE SHAN (RE-BMT)
+
+4. LCP JONATHAN (CBT COURSE 140926 - 061126)
+
+5. PTE MIKHAIL (CBT COURSE 140926 - 061126)
+
+6. CPL LUKE (RSO)
+
+7. PTE DHIMAN (RSO)
+
+TFT
+• Total Strength: 04
+• Present Strength: 04
+• Off Shift: 00
+
+• Absentees (MC, AL, etc): 00
+
+HDN
+• Total Strength: 14
+• Present Strength: 10 + 01 RF
+• Off Shift: 00
+
+RF: 01
+
+1. CPL TAUFIQ
+
+• Absentees (MC, AL, etc): 04
+
+1. CPL DARRSHUN (HL 290926 - 051026)
+
+2. LCP ZHARFAN (MP60 REHEARSALS @ MOWBRAY CAMP 280926 - 300926)
+
+3. LCP SEKAR NAVEEN (MP60 REHEARSALS @ MOWBRAY CAMP 280926 - 300926)
+
+4. PTE KAI ZENG (ENGAGEMENT @CLEMENTI CAMP)
+——————————————— 
+
+PLATOON 6
+• Total strength: 49
+• Present strength: 42
+
+SLR
+• Total Strength: 17
+• Present Strength: 12
+• Off Shift: 00
+
+• Absentees (MC, AL, etc): 05
+
+1. PTE WEI HAO (MC 290926 - 300926)
+
+2. LCP CHUN HEI (MC 290926 - 300926)
+
+3. PTE IRFAN (Clementi CO/RSM/OC Engagement)
+
+4. PTE JOSHUA LAU (Clementi CO/RSM/OC Engagement)
+
+5. PTE XIAO HENG (Clementi CO/RSM/OC Engagement)
+
+SRF A
+• Total Strength: 16
+• Present Strength: 15
+• Off Shift: 00
+
+• Absentees (MC, AL, etc): 01
+
+1. LCP JOE NAVEEN (MP60 @ MOWBRAY CAMP 280926 - 300926)
+
+SRF B
+• Total Strength: 16
+• Present Strength: 15
+• Off Shift: 00
+
+• Absentees (MC, AL, etc): 01
+
+1. LCP XU CHENXI (MP60 @ MOWBRAY CAMP 280926 - 300926)
+——————————————— 
+
+PLATOON 7
+• Total strength: 39
+• Present strength: 23
+
+BDK
+• Total Strength: 18
+• Present Strength: 11 + 02 RF
+• Off Shift: 00
+
+RF: 02
+
+1. 3SG ETHAN
+
+2. LTA NICHOLAS
+
+• Absentees (MC, AL, etc): 07
+
+1. 3SG HAKIMI (CL 280926 - 300926)
+
+2. LCP JACOB (CREATE M365 ACCOUNT @ CLEMENTI)
+
+3. LCP PHONE (MP60 REHEARSALS  230926 - 300926)
+
+4. LCP RYAN (RETURN NO1 @ MOWBRAY)
+
+5. PTE LUO YU (Clementi CO/RSM/OC Engagement)
+
+6. LCP ANTHONY (XWB 010926 - 300926)
+
+7. PTE HARSHIT (Clementi CO/RSM/OC Engagement)
+
+OSU A
+• Total Strength: 10
+• Present Strength: 00
+• Off Shift: 10
+
+OSU B
+• Total Strength: 11
+• Present Strength: 10
+• Off Shift: 00
+
+• Absentees (MC, AL, etc): 01
+
+1. LCP DHANESH (MC 290926 2100H - 011026 2100H)
+——————————————— 
+
+PLATOON 8
+• Total strength: 49
+• Present strength: 23
+
+PYAD A
+• Total Strength: 15
+• Present Strength: 00
+• Off Shift: 15
+
+PYAD B
+• Total Strength: 15
+• Present Strength: 09 + 01 RF
+• Off Shift: 00
+
+RF: 01
+
+1. 3SG DAVID
+
+• Absentees (MC, AL, etc): 06
+
+1. LCP HAIRUL (MC 200926 2100H - 051026 2100H)
+
+2. LCP AMIR (MC 280926 2100H - 300926 2100H)
+
+3. PTE ZHENG LIANG (AL 300926 0900H - 011026 2100H)
+
+4. LCP LOGESH (OFF 280926 2100H - 011026 2100H)
+
+5. PTE RANDOLPH (CBT COURSE 140926 - 061126)
+
+6. PTE KHAIRULLAH (CBT COURSE 140926 - 061126)
+
+PRC
+• Total Strength: 19
+• Present Strength: 13
+• Off Shift: 00
+
+• Absentees (MC, AL, etc): 06
+
+1. PTE SANJIIVAN (SCC@CMPBH MA @ 1100)
+
+2. LCP FAIZ (MP60 TRAINING @ MOWBRAY CAMP 230926 - 300926)
+
+3. PTE SHEN JIE (DB 130826 - 090227)
+
+4. PTE JINGYI (Clementi CO/RSM/OC Engagement)
+
+5. PTE WAYNE FOONG (Clementi CO/RSM/OC Engagement)
+
+6. PTE JOSHUA SOO (Clementi CO/RSM/OC Engagement)
