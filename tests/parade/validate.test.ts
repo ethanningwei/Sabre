@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { validate } from "@/lib/parade";
 import type { CoySnapshot } from "@/lib/parade/types";
-import { EXAMPLE_CAA, absent, camp, datedExampleSnapshot, duty, exampleSnapshot, present, subunit } from "../fixtures/example-snapshot";
+import { EXAMPLE_CAA, absent, camp, duty, exampleSnapshot, present, subunit } from "../fixtures/example-snapshot";
 
 function coy(subunits: CoySnapshot["subunits"], duties: CoySnapshot["duties"] = []): CoySnapshot {
   return { coy: { id: "c", key: "T", displayName: "Test" }, subunits, duties };
@@ -9,14 +9,8 @@ function coy(subunits: CoySnapshot["subunits"], duties: CoySnapshot["duties"] = 
 const codes = (s: CoySnapshot, caa = EXAMPLE_CAA) => validate(s, caa).map((i) => i.code);
 
 describe("validate", () => {
-  it("passes the real example once OTHERS have dates", () => {
-    expect(validate(datedExampleSnapshot(), EXAMPLE_CAA)).toEqual([]);
-  });
-
-  it("requires dates on OTHERS (stricter than the bot): the raw example has 19 without", () => {
-    const issues = validate(exampleSnapshot(), EXAMPLE_CAA);
-    expect(issues).toHaveLength(19);
-    expect(new Set(issues.map((i) => i.code))).toEqual(new Set(["missing-dates"]));
+  it("passes the real example", () => {
+    expect(validate(exampleSnapshot(), EXAMPLE_CAA)).toEqual([]);
   });
 
   it("flags missing RANK even for someone present", () => {
@@ -25,7 +19,7 @@ describe("validate", () => {
     expect(codes(coy([subunit("P1", [camp("A", p)])]))).toEqual(["missing-rank"]);
   });
 
-  it("flags absences without both dates, except MA", () => {
+  it("flags dated absences without both dates, but not MA or OTHERS", () => {
     const s = coy([
       subunit("P1", [
         camp("A", [
@@ -35,7 +29,7 @@ describe("validate", () => {
         ]),
       ]),
     ]);
-    expect(codes(s)).toEqual(["missing-dates", "missing-dates"]);
+    expect(codes(s)).toEqual(["missing-dates"]);
   });
 
   it("flags MA without timing and OTHERS without reason", () => {
@@ -104,7 +98,7 @@ describe("validate", () => {
   });
 
   it("reports every problem in one pass, with scope and a fix target", () => {
-    const snap = datedExampleSnapshot();
+    const snap = exampleSnapshot();
     const p5 = snap.subunits[1];
     const sftB = p5.camps[1];
     sftB.people[0].rank = "";

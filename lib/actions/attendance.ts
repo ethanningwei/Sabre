@@ -46,7 +46,7 @@ export async function setStatus(raw: StatusInput) {
     const { status } = input;
     if (status !== "PRESENT") {
       if (DATED_ABSENCE_TYPES.includes(status) && (!input.startDate || !input.endDate)) {
-        throw new UserError(`${status === "OTHERS" ? "Others" : status} needs a start and end date.`);
+        throw new UserError(`${status} needs a start and end date.`);
       }
       if (status === "MA" && !input.maTiming.trim()) throw new UserError("MA needs a timing, e.g. 1300.");
       if (status === "OTHERS" && !input.otherReason.trim()) throw new UserError("Please give the reason.");

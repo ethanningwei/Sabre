@@ -7,9 +7,9 @@
 export const ABSENCE_TYPES = ["HL", "MC", "OL", "AL", "OFF", "MA", "OTHERS"] as const;
 export type AbsenceType = (typeof ABSENCE_TYPES)[number];
 
-// These must carry both START and END dates. Only MA is exempt (it is for one
-// day, with a timing). OTHERS needs dates too — stricter than the bot.
-export const DATED_ABSENCE_TYPES: readonly AbsenceType[] = ["HL", "MC", "OL", "AL", "OFF", "OTHERS"];
+// These must carry both START and END dates. MA is exempt (one day, with a
+// timing), and so is OTHERS, as in the bot: some have no end date yet.
+export const DATED_ABSENCE_TYPES: readonly AbsenceType[] = ["HL", "MC", "OL", "AL", "OFF"];
 
 export const DUTY_TYPES = ["EXTRA", "RF", "SOL"] as const;
 export type DutyType = (typeof DUTY_TYPES)[number];
