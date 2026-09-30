@@ -48,3 +48,6 @@ sabre-export.json
 __pycache__/
 
 !.env.example
+
+# python venv for the Sheets export
+.venv/
