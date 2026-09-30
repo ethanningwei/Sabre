@@ -14,85 +14,53 @@ import {
 } from "drizzle-orm/pg-core";
 
 // ---------------------------------------------------------------------------
-// Auth (Better Auth core tables + our role/scope fields on user)
+// Sign-in: one shared password (APP_PASSWORD). Each person types their name,
+// which becomes a `user` row so every change is still attributed.
+// role/subunitId are kept for when individual logins come back; with the
+// shared password everyone is an admin.
 // ---------------------------------------------------------------------------
 
 export const userRole = pgEnum("user_role", ["pending", "guardcomm", "admin"]);
 
-export const user = pgTable("user", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  emailVerified: boolean("email_verified").default(false).notNull(),
-  image: text("image"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-  role: userRole("role").default("pending").notNull(),
-  /** a guardcomm's scope: the platoon/subunit they may edit */
-  subunitId: uuid("subunit_id").references(() => subunit.id, { onDelete: "set null" }),
-  active: boolean("active").default(true).notNull(),
-});
-
-export const session = pgTable(
-  "session",
+export const user = pgTable(
+  "user",
   {
     id: text("id").primaryKey(),
-    expiresAt: timestamp("expires_at").notNull(),
-    token: text("token").notNull().unique(),
+    name: text("name").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .$onUpdate(() => new Date())
-      .notNull(),
-    ipAddress: text("ip_address"),
-    userAgent: text("user_agent"),
+    lastSeenAt: timestamp("last_seen_at").defaultNow().notNull(),
+    role: userRole("role").default("admin").notNull(),
+    /** a guardcomm's scope: the platoon/subunit they may edit */
+    subunitId: uuid("subunit_id").references(() => subunit.id, { onDelete: "set null" }),
+    active: boolean("active").default(true).notNull(),
+  },
+  (t) => [uniqueIndex("user_name_uq").on(sql`lower(${t.name})`)],
+);
+
+export const appSession = pgTable(
+  "app_session",
+  {
+    /** sha256 of the cookie token — the token itself is never stored */
+    tokenHash: text("token_hash").primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-  },
-  (t) => [index("session_user_id_idx").on(t.userId)],
-);
-
-export const account = pgTable(
-  "account",
-  {
-    id: text("id").primaryKey(),
-    accountId: text("account_id").notNull(),
-    providerId: text("provider_id").notNull(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    accessToken: text("access_token"),
-    refreshToken: text("refresh_token"),
-    idToken: text("id_token"),
-    accessTokenExpiresAt: timestamp("access_token_expires_at"),
-    refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
-    scope: text("scope"),
-    password: text("password"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .$onUpdate(() => new Date())
-      .notNull(),
-  },
-  (t) => [index("account_user_id_idx").on(t.userId)],
-);
-
-export const verification = pgTable(
-  "verification",
-  {
-    id: text("id").primaryKey(),
-    identifier: text("identifier").notNull(),
-    value: text("value").notNull(),
+    /** HMAC of the shared password at sign-in: changing APP_PASSWORD signs everyone out */
+    passwordTag: text("password_tag").notNull(),
     expiresAt: timestamp("expires_at").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
   },
-  (t) => [index("verification_identifier_idx").on(t.identifier)],
+  (t) => [index("app_session_user_idx").on(t.userId)],
+);
+
+export const loginFailure = pgTable(
+  "login_failure",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ip: text("ip").notNull(),
+    at: timestamp("at").defaultNow().notNull(),
+  },
+  (t) => [index("login_failure_ip_at_idx").on(t.ip, t.at)],
 );
 
 // ---------------------------------------------------------------------------

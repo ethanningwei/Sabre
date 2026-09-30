@@ -17,7 +17,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             <Logo className="size-8 rounded-lg" />
             <span className="font-semibold tracking-tight">{coyRow.displayName}</span>
           </Link>
-          <UserMenu name={viewer.name} email={viewer.email} image={viewer.image} role={viewer.role} />
+          <UserMenu name={viewer.name} role={viewer.role} />
         </div>
       </header>
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">

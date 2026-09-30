@@ -8,7 +8,9 @@ Web app for Sabre coy (8SIR) company processes. The MVP replaces the parade-stat
 - A clean state can be copied, or sent to the coy's Telegram chat/topic with the old bot's token.
 
 ## Stack
-Next.js 16 (App Router) · TypeScript · Tailwind + shadcn/ui (Base UI) · Postgres + Drizzle · Better Auth (Google sign-in) · Vitest.
+Next.js 16 (App Router) · TypeScript · Tailwind + shadcn/ui (Base UI) · Postgres + Drizzle · Vitest.
+
+**Sign-in:** one shared password (`APP_PASSWORD`). Each person also types their rank and name, which is recorded against every change and in History. Everyone signed in has full access. Ten wrong passwords from one IP blocks it for 15 minutes, and changing `APP_PASSWORD` signs everyone out. The `role` and `subunitId` columns and the `assertCanEdit*` checks are still there for when individual logins return.
 
 ## Layout
 | Path | What |
@@ -30,17 +32,11 @@ Some bot quirks are kept on purpose and marked `PARITY QUIRK` in `lib/parade/com
 ```bash
 npm install
 createdb sabre_dev && createdb sabre_test
-cp .env.example .env.local        # fill in DATABASE_URL, BETTER_AUTH_SECRET (openssl rand -base64 32), ADMIN_EMAILS
+cp .env.example .env.local        # fill in DATABASE_URL, AUTH_SECRET (openssl rand -base64 32), APP_PASSWORD
 npm run db:migrate && npm run db:migrate:test
 npm run seed                      # example Sabre data (placeholder names), or `npm run import`, see below
 npm run dev
 ```
-Setting `DEV_AUTH=1` in `.env.local` shows an email-only "dev sign-in" on the login page, so you can test without Google. It is never enabled in production.
-
-To try the guardcomm view:
-1. Sign in with an address that isn't in `ADMIN_EMAILS`.
-2. Sign in as an admin, go to Admin › Users, and approve that user as a guardcomm for one platoon.
-
 ```bash
 npm test          # all tests (DB tests use sabre_test)
 npm run typecheck
@@ -67,23 +63,16 @@ Environment variables to set in Vercel:
 | Variable | Value |
 |---|---|
 | `DATABASE_URL` | Neon Postgres connection string (Singapore region). Added automatically by the Marketplace integration. |
-| `BETTER_AUTH_SECRET` | `openssl rand -base64 32` |
-| `BETTER_AUTH_URL` | The production URL, e.g. `https://sabre.vercel.app` |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | OAuth client (see below) |
-| `ADMIN_EMAILS` | Comma-separated Google emails of the admins. They become admins on first sign-in. |
+| `AUTH_SECRET` | `openssl rand -base64 32` |
+| `APP_PASSWORD` | The shared sign-in password. Make it long, e.g. four random words. |
 | `TELEGRAM_BOT_TOKEN` | The old bot's token (the `TOKEN=` line in `.env` on the VM) |
 
 Run migrations against production with `DATABASE_URL=<prod url> npm run db:migrate`.
 
-**Google OAuth client:** Google Cloud console › APIs & Services › Credentials › Create credentials › OAuth client ID › Web application.
-- Authorised JavaScript origin: your app URL.
-- Authorised redirect URI: `<app URL>/api/auth/callback/google`. Add `http://localhost:3000/api/auth/callback/google` too for local use.
-- On the OAuth consent screen, publish the app (External). Otherwise only listed test users can sign in.
-
 ## Cutover from the bot
 1. On the morning of cutover, export and import (see above) and confirm `✅ PARITY`.
 2. In Admin › Coy settings, check the chat ID and thread ID, then press **Send test message**.
-3. Brief the GCs: sign in with Google, then an admin approves them and assigns their platoon.
+3. Brief the GCs: share the URL and the password (in person or over a secure channel).
 4. Stop the bot on the VM: `pkill -f paradestate.py`.
 5. Delete the VM, or release its static IP. A *stopped* VM keeps charging for the IP.
 

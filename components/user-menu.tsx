@@ -1,9 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { LogOut, Monitor, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,23 +12,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { authClient } from "@/lib/auth-client";
+import { logout } from "@/lib/actions/auth";
 
 const ROLE_LABEL = { admin: "Admin", guardcomm: "Guardcomm", pending: "Pending" } as const;
 
 export function UserMenu({
   name,
-  email,
-  image,
   role,
 }: {
   name: string;
-  email: string;
-  image: string | null;
   role: keyof typeof ROLE_LABEL;
 }) {
   const { setTheme } = useTheme();
-  const router = useRouter();
   const initials = name
     .split(/\s+/)
     .map((w) => w[0])
@@ -41,7 +35,6 @@ export function UserMenu({
     <DropdownMenu>
       <DropdownMenuTrigger className="rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50" aria-label="Account">
         <Avatar>
-          {image && <AvatarImage src={image} alt="" />}
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
@@ -49,7 +42,6 @@ export function UserMenu({
         <DropdownMenuGroup>
           <DropdownMenuLabel className="flex flex-col gap-0.5 py-2">
             <span className="text-sm font-medium text-foreground">{name}</span>
-            <span className="truncate font-normal">{email}</span>
             <span className="font-normal">{ROLE_LABEL[role]}</span>
           </DropdownMenuLabel>
         </DropdownMenuGroup>
@@ -66,11 +58,7 @@ export function UserMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"
-          onClick={async () => {
-            await authClient.signOut();
-            router.replace("/login");
-            router.refresh();
-          }}
+          onClick={() => logout()}
         >
           <LogOut /> Sign out
         </DropdownMenuItem>

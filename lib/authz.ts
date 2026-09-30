@@ -1,19 +1,16 @@
 import "server-only";
 import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { camp, duty, person, user } from "@/lib/db/schema";
+import { sessionUserId } from "@/lib/session";
 
 export type Role = "pending" | "guardcomm" | "admin";
 
 export interface Viewer {
   id: string;
   name: string;
-  email: string;
-  image: string | null;
   role: Role;
   subunitId: string | null;
   active: boolean;
@@ -27,26 +24,17 @@ export class ForbiddenError extends Error {
 
 /** The signed-in user, re-read from the DB so role/scope changes apply immediately. */
 export const getViewer = cache(async (): Promise<Viewer | null> => {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return null;
-  const [row] = await db.select().from(user).where(eq(user.id, session.user.id));
+  const userId = await sessionUserId();
+  if (!userId) return null;
+  const [row] = await db.select().from(user).where(eq(user.id, userId));
   if (!row) return null;
-  return {
-    id: row.id,
-    name: row.name,
-    email: row.email,
-    image: row.image,
-    role: row.role,
-    subunitId: row.subunitId,
-    active: row.active,
-  };
+  return { id: row.id, name: row.name, role: row.role, subunitId: row.subunitId, active: row.active };
 });
 
-/** For pages: signed in, approved and active — otherwise redirect. */
+/** For pages: signed in and active — otherwise back to the login page. */
 export async function requireViewer(): Promise<Viewer> {
   const viewer = await getViewer();
-  if (!viewer) redirect("/login");
-  if (viewer.role === "pending" || !viewer.active) redirect("/pending");
+  if (!viewer || viewer.role === "pending" || !viewer.active) redirect("/login");
   return viewer;
 }
 

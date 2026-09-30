@@ -72,7 +72,7 @@ describe("database round trip", () => {
 });
 
 describe("platoon scope", () => {
-  const base: Viewer = { id: "u", name: "GC", email: "gc@x", image: null, role: "guardcomm", subunitId: null, active: true };
+  const base: Viewer = { id: "u", name: "GC", role: "guardcomm", subunitId: null, active: true };
 
   it("guardcomms edit only their own platoon; admins edit everything; pending edits nothing", async (ctx) => {
     if (!reachable) ctx.skip();

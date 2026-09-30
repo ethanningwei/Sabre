@@ -5,7 +5,7 @@ import { z } from "zod";
 import { actionAdmin } from "@/lib/authz";
 import { getCoy } from "@/lib/data/snapshot";
 import { db } from "@/lib/db";
-import { absence, camp, coy, person, subunit, user } from "@/lib/db/schema";
+import { absence, camp, coy, person, subunit } from "@/lib/db/schema";
 import { sendToTelegram, TelegramError } from "@/lib/telegram";
 import { audit, run, UserError } from "./shared";
 
@@ -15,36 +15,6 @@ const name = (what: string) => z.string().trim().min(1, `${what} is required`).m
 function uniqueViolation(e: unknown): boolean {
   const code = (e as { code?: string; cause?: { code?: string } })?.code ?? (e as { cause?: { code?: string } })?.cause?.code;
   return code === "23505";
-}
-
-// ---------------------------------------------------------------- users
-
-const userUpdate = z.object({
-  userId: z.string().min(1),
-  role: z.enum(["pending", "guardcomm", "admin"]),
-  subunitId: id.nullable(),
-  active: z.boolean(),
-});
-
-export async function updateUser(raw: z.input<typeof userUpdate>) {
-  return run(async () => {
-    const viewer = await actionAdmin();
-    const input = userUpdate.parse(raw);
-    if (input.userId === viewer.id && (input.role !== "admin" || !input.active)) {
-      throw new UserError("You can't remove your own admin access. Ask another admin.");
-    }
-    if (input.role === "guardcomm" && !input.subunitId) throw new UserError("Pick the guardcomm's platoon.");
-    const [before] = await db.select().from(user).where(eq(user.id, input.userId));
-    if (!before) throw new UserError("User not found.");
-    const values = {
-      role: input.role,
-      subunitId: input.role === "guardcomm" ? input.subunitId : null,
-      active: input.active,
-    };
-    await db.update(user).set(values).where(eq(user.id, input.userId));
-    await audit(db, viewer, "update-user", "user", input.userId, { role: before.role, subunitId: before.subunitId, active: before.active }, values);
-    return undefined;
-  });
 }
 
 // ---------------------------------------------------------------- coy settings

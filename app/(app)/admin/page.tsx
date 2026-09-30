@@ -1,16 +1,11 @@
-import { count, eq } from "drizzle-orm";
-import { Building2, ChevronRight, MessageSquare, UserCog, Users } from "lucide-react";
+import { Building2, ChevronRight, MessageSquare, Users } from "lucide-react";
 import Link from "next/link";
 import { requireAdminPage } from "@/lib/authz";
-import { db } from "@/lib/db";
-import { user } from "@/lib/db/schema";
 
 export default async function AdminPage() {
   await requireAdminPage();
-  const [{ pending }] = await db.select({ pending: count() }).from(user).where(eq(user.role, "pending"));
 
-  const items = [
-    { href: "/admin/users", icon: UserCog, title: "Users", desc: "Approve sign-ins, set roles and platoons", badge: pending },
+  const items: { href: string; icon: typeof Users; title: string; desc: string; badge?: number }[] = [
     { href: "/admin/people", icon: Users, title: "People", desc: "Add, edit, move or remove people on the roster" },
     { href: "/admin/structure", icon: Building2, title: "Structure", desc: "Subunits and camps, their names and order" },
     { href: "/admin/settings", icon: MessageSquare, title: "Coy settings", desc: "Display name and the Telegram chat" },
