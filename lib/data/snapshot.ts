@@ -1,4 +1,4 @@
-import "server-only";
+// No "server-only" here: the import script (plain Node) uses this too.
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { absence, camp, coy, duty, person, subunit } from "@/lib/db/schema";
@@ -10,6 +10,12 @@ export type CoyRow = typeof coy.$inferSelect;
 export async function getCoy(): Promise<CoyRow> {
   const [row] = await db.select().from(coy).orderBy(asc(coy.key)).limit(1);
   if (!row) throw new Error("No coy set up yet — run the import (npm run import) or seed (npm run seed).");
+  return row;
+}
+
+export async function getCoyByKey(key: string): Promise<CoyRow> {
+  const [row] = await db.select().from(coy).where(eq(coy.key, key));
+  if (!row) throw new Error(`No coy '${key}'`);
   return row;
 }
 
