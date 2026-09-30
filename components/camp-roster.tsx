@@ -102,7 +102,7 @@ export function CampRoster({
         <div>
           <h1 className="text-xl font-semibold tracking-tight">{camp.name}</h1>
           <p className="text-sm text-muted-foreground">
-            {absentCount} absent · {total} total
+            {absentCount} absent · {total} total{!canEdit && " · view only"}
           </p>
         </div>
         <p className="font-mono text-2xl font-semibold tabular-nums">
