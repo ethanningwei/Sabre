@@ -35,6 +35,7 @@ export default async function CampPage({ params, searchParams }: PageProps<"/c/[
       </Link>
       <CampRoster
         camp={{ id: campState.camp.id, name: campState.camp.name, onShift: campState.onShift }}
+        isHq={sub.subunit.isHq}
         present={campState.present}
         total={campState.total}
         people={campState.camp.people}

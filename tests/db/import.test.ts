@@ -48,6 +48,20 @@ describe("sheet import", () => {
     expect(renderParadeState(await loadSnapshot(coyRow), { date: "2026-09-30", time: "1100" })).toBe(golden);
   });
 
+  it("ties an SOL to the person's home team when their name is found in the other team", () => {
+    const data = exampleExport();
+    const sftA = data.subunits[1].camps[0];
+    sftA.people[0] = { ...sftA.people[0], name: "HAOYANG" }; // HAOYANG belongs to SFT A
+    const { input } = parseExport(data);
+    const sol = input.duties.find((d) => d.type === "SOL")!;
+    expect(sol.campId).toBe("SFT A");
+    expect(sol.personId).toBe(input.subunits[1].camps[0].people[0].id);
+    // SFT A is off shift, so it still counts under SFT B — same text as the bot
+    expect(renderParadeState(input, { date: "2026-09-30", time: "1100" })).toContain(
+      "Serving SOL: 01\n\n1. PTE HAOYANG (250926 - 081026)",
+    );
+  });
+
   it("reports every bad cell at once", () => {
     const data = exampleExport();
     const hdn = data.subunits[1].camps[3].people;

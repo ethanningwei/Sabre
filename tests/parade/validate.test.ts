@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { validate } from "@/lib/parade";
 import type { CoySnapshot } from "@/lib/parade/types";
-import { EXAMPLE_CAA, absent, camp, duty, exampleSnapshot, present, subunit } from "../fixtures/example-snapshot";
+import { EXAMPLE_CAA, absent, camp, datedExampleSnapshot, duty, exampleSnapshot, present, subunit } from "../fixtures/example-snapshot";
 
 function coy(subunits: CoySnapshot["subunits"], duties: CoySnapshot["duties"] = []): CoySnapshot {
   return { coy: { id: "c", key: "T", displayName: "Test" }, subunits, duties };
@@ -9,8 +9,14 @@ function coy(subunits: CoySnapshot["subunits"], duties: CoySnapshot["duties"] = 
 const codes = (s: CoySnapshot, caa = EXAMPLE_CAA) => validate(s, caa).map((i) => i.code);
 
 describe("validate", () => {
-  it("passes the real example", () => {
-    expect(validate(exampleSnapshot(), EXAMPLE_CAA)).toEqual([]);
+  it("passes the real example once OTHERS have dates", () => {
+    expect(validate(datedExampleSnapshot(), EXAMPLE_CAA)).toEqual([]);
+  });
+
+  it("requires dates on OTHERS (stricter than the bot): the raw example has 19 without", () => {
+    const issues = validate(exampleSnapshot(), EXAMPLE_CAA);
+    expect(issues).toHaveLength(19);
+    expect(new Set(issues.map((i) => i.code))).toEqual(new Set(["missing-dates"]));
   });
 
   it("flags missing RANK even for someone present", () => {
@@ -19,7 +25,7 @@ describe("validate", () => {
     expect(codes(coy([subunit("P1", [camp("A", p)])]))).toEqual(["missing-rank"]);
   });
 
-  it("flags dated absences without both dates, but not MA or OTHERS", () => {
+  it("flags absences without both dates, except MA", () => {
     const s = coy([
       subunit("P1", [
         camp("A", [
@@ -29,12 +35,12 @@ describe("validate", () => {
         ]),
       ]),
     ]);
-    expect(codes(s)).toEqual(["missing-dates"]);
+    expect(codes(s)).toEqual(["missing-dates", "missing-dates"]);
   });
 
   it("flags MA without timing and OTHERS without reason", () => {
     const s = coy([
-      subunit("P1", [camp("A", [absent("PTE A", { type: "MA" }), absent("PTE B", { type: "OTHERS", reason: " " })])]),
+      subunit("P1", [camp("A", [absent("PTE A", { type: "MA" }), absent("PTE B", { type: "OTHERS", reason: " ", start: "300926", end: "300926" })])]),
     ]);
     expect(codes(s)).toEqual(["missing-ma-timing", "missing-other-reason"]);
   });
@@ -65,6 +71,30 @@ describe("validate", () => {
     expect(codes(s)).toEqual(["overdue-duty"]);
   });
 
+  it("ignores everything about an off-shift camp's people", () => {
+    const p = [absent("PTE A", { type: "MC", start: "200926", end: "250926" }), ...present("A", 1)];
+    p[1].rank = "";
+    expect(codes(coy([subunit("P1", [camp("A", p, false)])]))).toEqual([]);
+    expect(codes(coy([subunit("P1", [camp("A", p, true)])]))).toEqual(["overdue-absence", "missing-rank"]);
+  });
+
+  it("ignores Extra/RF/SOL that aren't counted right now", () => {
+    const s = coy([subunit("P1", [camp("A", present("A", 1), false)])], [duty("RF", "CPL R", "A", "280926", "290926")]);
+    expect(codes(s)).toEqual([]);
+  });
+
+  it("flags someone on RF who is still counted present at their on-shift home team", () => {
+    const home = camp("HDN", present("H", 2));
+    const bdk = camp("BDK", present("B", 2));
+    const rf = { ...duty("RF", "CPL R", "BDK", "300926", "300926"), personId: home.people[0].id };
+    expect(codes(coy([subunit("P1", [home, bdk])], [rf]))).toEqual(["double-counted"]);
+    home.people[0].absence = absent("X", { type: "OTHERS", reason: "RF @ BDK", start: "300926", end: "300926" }).absence;
+    expect(codes(coy([subunit("P1", [home, bdk])], [rf]))).toEqual([]);
+    home.onShift = false; // home off shift: nothing to double count
+    home.people[0].absence = null;
+    expect(codes(coy([subunit("P1", [home, bdk])], [rf]))).toEqual([]);
+  });
+
   it("flags HQ without exactly one camp, and empty camps", () => {
     const s = coy([
       subunit("COY HQ", [camp("COY HQ", present("H", 1)), camp("EXTRA HQ", present("E", 1))], true),
@@ -74,7 +104,7 @@ describe("validate", () => {
   });
 
   it("reports every problem in one pass, with scope and a fix target", () => {
-    const snap = exampleSnapshot();
+    const snap = datedExampleSnapshot();
     const p5 = snap.subunits[1];
     const sftB = p5.camps[1];
     sftB.people[0].rank = "";

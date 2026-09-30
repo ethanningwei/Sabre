@@ -187,7 +187,7 @@ function StatusForm({
               ))}
             </div>
           )}
-          <p className="text-xs text-muted-foreground">Printed exactly as typed. Dates below are optional.</p>
+          <p className="text-xs text-muted-foreground">Printed exactly as typed.</p>
         </div>
       )}
 

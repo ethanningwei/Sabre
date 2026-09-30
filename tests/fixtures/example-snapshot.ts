@@ -59,7 +59,8 @@ export function present(prefix: string, n: number): SnapshotPerson[] {
 }
 
 export function camp(name: string, people: SnapshotPerson[], onShift = true): SnapshotCamp {
-  return { id: `camp:${name}`, name, onShift, people };
+  // teams of one physical camp: "SFT A"/"SFT B" -> "SFT"
+  return { id: `camp:${name}`, name, post: name.replace(/\s+[AB]$/, ""), onShift, people };
 }
 
 export function subunit(name: string, camps: SnapshotCamp[], isHq = false): SnapshotSubunit {
@@ -73,6 +74,7 @@ export function duty(type: DutyType, rankName: string, campName: string, start: 
     type,
     rank,
     name: rest.join(" "),
+    personId: null,
     campId: `camp:${campName}`,
     startDate: iso(start),
     startTime: null,
@@ -185,3 +187,19 @@ export function exampleSnapshot(): CoySnapshot {
 }
 
 export const EXAMPLE_CAA = { date: "2026-09-30", time: "1100" };
+
+/**
+ * The example with dates filled in on every OTHERS absence — the app requires
+ * them (the bot didn't), so this is the version that passes validation.
+ */
+export function datedExampleSnapshot(): CoySnapshot {
+  const snap = exampleSnapshot();
+  for (const s of snap.subunits)
+    for (const c of s.camps)
+      for (const p of c.people)
+        if (p.absence?.type === "OTHERS" && (!p.absence.startDate || !p.absence.endDate)) {
+          p.absence.startDate = "2026-09-30";
+          p.absence.endDate = "2026-09-30";
+        }
+  return snap;
+}

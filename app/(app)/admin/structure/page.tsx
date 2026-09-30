@@ -14,7 +14,7 @@ export default async function StructurePage() {
           id: s.id,
           name: s.name,
           isHq: s.isHq,
-          camps: s.camps.map((c) => ({ id: c.id, name: c.name, people: c.people.length })),
+          camps: s.camps.map((c) => ({ id: c.id, name: c.name, post: c.post, people: c.people.length })),
         }))}
       />
     </div>

@@ -2,6 +2,7 @@
 // data, strictly: every cell that can't be represented is reported (all at
 // once, like the bot) instead of guessed at.
 
+import { derivePosts } from "@/lib/parade/compute";
 import { parseDdmmyy, parseHhmm } from "@/lib/parade/time";
 import { ABSENCE_TYPES, DUTY_TYPES, type AbsenceType, type DutyType, type SnapshotAbsence } from "@/lib/parade/types";
 import type { CoyInput } from "./write-coy";
@@ -50,6 +51,7 @@ export function parseCaaLine(line: string): { date: string; time: string } | nul
 export function parseExport(data: SheetExport): { input: CoyInput; problems: string[] } {
   const problems: string[] = [];
   let seq = 0;
+  const posts = derivePosts(data.subunits.flatMap((s) => s.camps.map((c) => c.name)));
 
   const input: CoyInput = {
     coy: { id: "", key: data.coy.key, displayName: data.coy.displayName },
@@ -61,6 +63,7 @@ export function parseExport(data: SheetExport): { input: CoyInput; problems: str
       camps: s.camps.map((c) => ({
         id: c.name,
         name: c.name,
+        post: posts.get(c.name) ?? c.name,
         onShift: c.onShift,
         people: c.people.map((p) => {
           const where = `${s.name} › ${c.name} › '${p.name}'`;
@@ -108,6 +111,7 @@ export function parseExport(data: SheetExport): { input: CoyInput; problems: str
           type: d.type as DutyType,
           rank: d.rank,
           name: d.name,
+          personId: null,
           campId: d.camp, // resolved by name in writeCoy
           startDate: start.date,
           startTime: start.time,
@@ -117,5 +121,28 @@ export function parseExport(data: SheetExport): { input: CoyInput; problems: str
       ];
     }),
   };
+  linkSolToHome(input);
   return { input, problems };
+}
+
+/**
+ * In the Sheets, an SOL was typed under the team they serve with (e.g. SFT B).
+ * The app instead ties SOL to the person and works out where it counts from
+ * the shifts. Link it when the name matches exactly one person in another team
+ * of the same physical camp; otherwise leave it as a fixed-camp entry.
+ */
+function linkSolToHome(input: CoyInput) {
+  const camps = input.subunits.flatMap((s) => s.camps);
+  for (const d of input.duties) {
+    if (d.type !== "SOL") continue;
+    const serving = camps.find((c) => c.name === d.campId);
+    if (!serving) continue;
+    const matches = camps
+      .filter((c) => c.post === serving.post && c.name !== serving.name)
+      .flatMap((c) => c.people.filter((p) => p.name.trim() === d.name.trim()).map((p) => ({ c, p })));
+    if (matches.length === 1) {
+      d.personId = matches[0].p.id;
+      d.campId = matches[0].c.name; // home team
+    }
+  }
 }

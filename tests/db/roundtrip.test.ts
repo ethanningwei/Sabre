@@ -37,8 +37,10 @@ describe("database round trip", () => {
     if (!reachable) ctx.skip();
     await writeCoy(db, { ...exampleSnapshot(), telegram: { chatId: null, threadId: null } });
     const snap = await snapshot();
-    expect(validate(snap, EXAMPLE_CAA)).toEqual([]);
+    // the raw example lacks dates on 19 OTHERS, which the app requires
+    expect(validate(snap, EXAMPLE_CAA).every((i) => i.code === "missing-dates")).toBe(true);
     expect(renderParadeState(snap, EXAMPLE_CAA)).toBe(golden);
+    expect(snap.subunits[1].camps.map((c) => c.post)).toEqual(["SFT", "SFT", "TFT", "HDN"]);
   });
 
   it("re-importing is idempotent", async (ctx) => {

@@ -15,6 +15,13 @@
       "when": 1790747339816,
       "tag": "0001_shared_password",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790751448668,
+      "tag": "0002_camp_post_duty_absence",
+      "breakpoints": true
     }
   ]
 }

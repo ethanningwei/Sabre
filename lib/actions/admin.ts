@@ -135,10 +135,10 @@ export async function moveSubunit(subunitId: string, direction: -1 | 1) {
   });
 }
 
-export async function createCamp(raw: { subunitId: string; name: string }) {
+export async function createCamp(raw: { subunitId: string; name: string; post: string }) {
   return run(async () => {
     const viewer = await actionAdmin();
-    const input = z.object({ subunitId: id, name: name("Camp name") }).parse(raw);
+    const input = z.object({ subunitId: id, name: name("Camp name"), post: z.string().trim().max(100) }).parse(raw);
     const coyRow = await getCoy();
     const [s] = await db.select().from(subunit).where(eq(subunit.id, input.subunitId));
     if (!s) throw new UserError("Subunit not found.");
@@ -150,7 +150,13 @@ export async function createCamp(raw: { subunitId: string; name: string }) {
     try {
       const [row] = await db
         .insert(camp)
-        .values({ coyId: coyRow.id, subunitId: s.id, name: input.name, sortOrder: (last ?? -1) + 1 })
+        .values({
+          coyId: coyRow.id,
+          subunitId: s.id,
+          name: input.name,
+          post: input.post && input.post !== input.name ? input.post : null,
+          sortOrder: (last ?? -1) + 1,
+        })
         .returning();
       await audit(db, viewer, "create-camp", "camp", row.id, null, row);
     } catch (e) {
@@ -161,10 +167,12 @@ export async function createCamp(raw: { subunitId: string; name: string }) {
   });
 }
 
-export async function updateCamp(raw: { campId: string; name: string; subunitId: string }) {
+export async function updateCamp(raw: { campId: string; name: string; subunitId: string; post: string }) {
   return run(async () => {
     const viewer = await actionAdmin();
-    const input = z.object({ campId: id, name: name("Camp name"), subunitId: id }).parse(raw);
+    const input = z
+      .object({ campId: id, name: name("Camp name"), subunitId: id, post: z.string().trim().max(100) })
+      .parse(raw);
     const [before] = await db.select().from(camp).where(eq(camp.id, input.campId));
     if (!before) throw new UserError("Camp not found.");
     if (before.subunitId !== input.subunitId) {
@@ -178,7 +186,12 @@ export async function updateCamp(raw: { campId: string; name: string; subunitId:
       }
     }
     try {
-      await db.update(camp).set({ name: input.name, subunitId: input.subunitId }).where(eq(camp.id, input.campId));
+      // blank or same as the name = its own physical camp
+      const post = input.post && input.post !== input.name ? input.post : null;
+      await db
+        .update(camp)
+        .set({ name: input.name, subunitId: input.subunitId, post })
+        .where(eq(camp.id, input.campId));
       await audit(db, viewer, "update-camp", "camp", input.campId, before, input);
     } catch (e) {
       if (uniqueViolation(e)) throw new UserError(`A camp called '${input.name}' already exists.`);

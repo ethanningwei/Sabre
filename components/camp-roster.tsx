@@ -4,6 +4,7 @@ import { AlertTriangle, CheckCheck, ListChecks, Moon, Search, X } from "lucide-r
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { ShiftToggle } from "@/components/shift-toggle";
 import { StatusChip } from "@/components/status-chip";
 import { StatusSheet } from "@/components/status-sheet";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ export interface PersonIssue {
 
 export function CampRoster({
   camp,
+  isHq,
   present,
   total,
   people,
@@ -35,6 +37,7 @@ export function CampRoster({
   openPersonId,
 }: {
   camp: { id: string; name: string; onShift: boolean };
+  isHq: boolean;
   present: number;
   total: number;
   people: SnapshotPerson[];
@@ -45,12 +48,14 @@ export function CampRoster({
   today: string;
   openPersonId: string | null;
 }) {
+  // an off-shift team isn't printed or counted, so it's locked
+  const editable = canEdit && camp.onShift;
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>(issues.length ? "issues" : "all");
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [sheetFor, setSheetFor] = useState<string[] | null>(
-    openPersonId && people.some((p) => p.id === openPersonId) ? [openPersonId] : null,
+    editable && openPersonId && people.some((p) => p.id === openPersonId) ? [openPersonId] : null,
   );
   const [pending, startTransition] = useTransition();
 
@@ -112,9 +117,13 @@ export function CampRoster({
       </div>
 
       {!camp.onShift && (
-        <div className="flex items-center gap-2 rounded-xl bg-offshift/10 px-3 py-2.5 text-sm text-offshift">
-          <Moon className="size-4" />
-          Off shift. The whole camp counts as 00 present.
+        <div className="flex items-start gap-3 rounded-xl bg-offshift/10 p-3 text-sm">
+          <Moon className="mt-0.5 size-4 shrink-0 text-offshift" />
+          <p className="flex-1">
+            <span className="font-medium">Off shift.</span> Counts as 00 present, and nobody here is checked or listed,
+            so attendance is locked. Put the camp on shift to update it.
+          </p>
+          {canEdit && !isHq && <ShiftToggle campId={camp.id} campName={camp.name} onShift={camp.onShift} />}
         </div>
       )}
 
@@ -130,7 +139,7 @@ export function CampRoster({
               inputMode="search"
             />
           </div>
-          {canEdit && (
+          {editable && (
             <Button
               variant={selecting ? "secondary" : "outline"}
               className="h-10 shrink-0"
@@ -174,7 +183,7 @@ export function CampRoster({
           const personIssues = issuesByPerson.get(p.id) ?? [];
           const overdue = personIssues.some((i) => i.code === "overdue-absence");
           return (
-            <li key={p.id} className="flex items-center gap-3 px-3 py-3">
+            <li key={p.id} className={cn("flex items-center gap-3 px-3 py-3", !camp.onShift && "opacity-60")}>
               {selecting && (
                 <Checkbox
                   checked={selected.has(p.id)}
@@ -185,8 +194,8 @@ export function CampRoster({
               )}
               <button
                 className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                onClick={() => (selecting ? toggle(p.id) : canEdit ? setSheetFor([p.id]) : undefined)}
-                disabled={!canEdit && !selecting}
+                onClick={() => (selecting ? toggle(p.id) : editable ? setSheetFor([p.id]) : undefined)}
+                disabled={!editable && !selecting}
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[15px] font-medium">
@@ -202,9 +211,9 @@ export function CampRoster({
                       </p>
                     ))}
                 </div>
-                <StatusChip status={p.absence?.type ?? "PRESENT"} overdue={overdue} />
+                <StatusChip status={camp.onShift ? (p.absence?.type ?? "PRESENT") : "OFFSHIFT"} overdue={overdue} />
               </button>
-              {overdue && canEdit && !selecting && (
+              {overdue && editable && !selecting && (
                 <Button size="sm" variant="outline" disabled={pending} onClick={() => markPresent([p.id])}>
                   Back
                 </Button>

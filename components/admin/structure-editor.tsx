@@ -23,7 +23,7 @@ interface Sub {
   id: string;
   name: string;
   isHq: boolean;
-  camps: { id: string; name: string; people: number }[];
+  camps: { id: string; name: string; post: string; people: number }[];
 }
 
 type Editing =
@@ -75,7 +75,10 @@ export function StructureEditor({ subunits }: { subunits: Sub[] }) {
             {s.camps.map((c, ci) => (
               <li key={c.id} className="flex items-center gap-1 px-3 py-1.5">
                 <button className="flex-1 py-1.5 text-left text-sm" onClick={() => setEditing({ kind: "camp", sub: s, camp: c })}>
-                  {c.name} <span className="text-xs text-muted-foreground">· {c.people} people</span>
+                  {c.name}{" "}
+                  <span className="text-xs text-muted-foreground">
+                    · {c.people} people{c.post !== c.name && ` · camp ${c.post}`}
+                  </span>
                 </button>
                 <Button variant="ghost" size="icon-sm" disabled={pending || ci === 0} onClick={() => act(() => moveCamp(c.id, -1))} aria-label="Move up">
                   <ArrowUp />
@@ -130,6 +133,7 @@ function EditForm({
   const [name, setName] = useState(initialName);
   const [isHq, setIsHq] = useState(false);
   const [subunitId, setSubunitId] = useState(editing.kind === "camp" || editing.kind === "new-camp" ? editing.sub.id : "");
+  const [post, setPost] = useState(editing.kind === "camp" && editing.camp.post !== editing.camp.name ? editing.camp.post : "");
 
   const title = {
     "new-subunit": "Add subunit",
@@ -145,9 +149,9 @@ function EditForm({
       case "subunit":
         return act(() => renameSubunit(editing.sub.id, name), "Saved");
       case "new-camp":
-        return act(() => createCamp({ subunitId: editing.sub.id, name }), "Camp added");
+        return act(() => createCamp({ subunitId: editing.sub.id, name, post }), "Camp added");
       case "camp":
-        return act(() => updateCamp({ campId: editing.camp.id, name, subunitId }), "Saved");
+        return act(() => updateCamp({ campId: editing.camp.id, name, subunitId, post }), "Saved");
     }
   }
 
@@ -171,6 +175,16 @@ function EditForm({
           <input type="checkbox" checked={isHq} onChange={(e) => setIsHq(e.target.checked)} className="size-4" />
           This is the COY HQ (one camp, printed as its own block)
         </label>
+      )}
+      {(editing.kind === "camp" || editing.kind === "new-camp") && (
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-xs text-muted-foreground">Physical camp (for teams that take turns)</Label>
+          <Input value={post} onChange={(e) => setPost(e.target.value)} className="h-11" placeholder="e.g. SFT for SFT A and SFT B" />
+          <p className="text-xs text-muted-foreground">
+            Teams with the same physical camp take turns on shift. SOL is counted under whichever team is on shift. Leave
+            blank if this camp has only one team.
+          </p>
+        </div>
       )}
       {editing.kind === "camp" && (
         <div className="flex flex-col gap-1.5">

@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   boolean,
   index,
   integer,
@@ -102,6 +103,8 @@ export const camp = pgTable(
       .notNull()
       .references(() => subunit.id, { onDelete: "restrict" }),
     name: text("name").notNull(),
+    /** physical camp shared by teams that take turns (SFT A + SFT B = "SFT"); null = its own name */
+    post: text("post"),
     sortOrder: integer("sort_order").notNull(),
     onShift: boolean("on_shift").default(true).notNull(),
   },
@@ -148,6 +151,8 @@ export const absence = pgTable(
     endTime: text("end_time"),
     maTiming: text("ma_timing").default("").notNull(),
     maLocation: text("ma_location").default("").notNull(),
+    /** set when the app created this absence for an Extra/RF ("RF @ BDK"); it follows the duty */
+    dutyId: uuid("duty_id").references((): AnyPgColumn => duty.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
     /** null = currently absent. Closed rows are kept as history (MC/leave tracking). */

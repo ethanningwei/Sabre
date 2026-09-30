@@ -35,6 +35,7 @@ export async function writeCoy(db: Db, input: CoyInput) {
     if (campIds.length) await tx.delete(person).where(inArray(person.campId, campIds)); // cascades absences
 
     const campIdByName = new Map<string, string>();
+    const personIdMap = new Map<string, string>(); // input person id -> DB id
     const keptSubunits: string[] = [];
     const keptCamps: string[] = [];
     let campOrder = 0;
@@ -53,12 +54,13 @@ export async function writeCoy(db: Db, input: CoyInput) {
       keptSubunits.push(srow.id);
 
       for (const sc of s.camps) {
+        const post = sc.post && sc.post !== sc.name ? sc.post : null;
         const [crow] = await tx
           .insert(camp)
-          .values({ coyId: c.id, subunitId: srow.id, name: sc.name, onShift: sc.onShift, sortOrder: campOrder++ })
+          .values({ coyId: c.id, subunitId: srow.id, name: sc.name, post, onShift: sc.onShift, sortOrder: campOrder++ })
           .onConflictDoUpdate({
             target: [camp.coyId, camp.name],
-            set: { subunitId: srow.id, onShift: sc.onShift, sortOrder: campOrder - 1 },
+            set: { subunitId: srow.id, post, onShift: sc.onShift, sortOrder: campOrder - 1 },
           })
           .returning();
         keptCamps.push(crow.id);
@@ -71,6 +73,7 @@ export async function writeCoy(db: Db, input: CoyInput) {
             .insert(person)
             .values({ campId: crow.id, name: p.name, rank: p.rank, role: p.role, sortOrder: pi })
             .returning({ id: person.id });
+          personIdMap.set(p.id, prow.id);
           people++;
           if (p.absence) {
             const a = p.absence;
@@ -105,6 +108,7 @@ export async function writeCoy(db: Db, input: CoyInput) {
         type: d.type,
         rank: d.rank,
         name: d.name,
+        personId: d.personId ? (personIdMap.get(d.personId) ?? null) : null,
         campId,
         startDate: d.startDate,
         startTime: d.startTime,

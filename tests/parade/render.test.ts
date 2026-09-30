@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { renderParadeState, validate } from "@/lib/parade";
+import { renderParadeState } from "@/lib/parade";
 import { EXAMPLE_CAA, absent, camp, exampleSnapshot, present, subunit, duty } from "../fixtures/example-snapshot";
 import type { CoySnapshot } from "@/lib/parade/types";
 
@@ -13,9 +13,8 @@ function coy(subunits: CoySnapshot["subunits"], duties: CoySnapshot["duties"] = 
 
 describe("renderParadeState", () => {
   it("matches the bot's real 300926 1100H output character for character", () => {
-    const snap = exampleSnapshot();
-    expect(validate(snap, EXAMPLE_CAA)).toEqual([]);
-    expect(renderParadeState(snap, EXAMPLE_CAA)).toBe(golden);
+    // rendering is unchanged; validation is stricter than the bot (see validate.test.ts)
+    expect(renderParadeState(exampleSnapshot(), EXAMPLE_CAA)).toBe(golden);
   });
 
   it("prints MA with and without a location", () => {
@@ -74,14 +73,31 @@ describe("renderParadeState", () => {
     expect(text).toContain("PLATOON 1: 06/03");
   });
 
-  it("PARITY QUIRK: extras on an off-shift camp still count towards the platoon", () => {
+  it("Extra/RF/SOL at an off-shift camp are not counted anywhere (the bot double-counted them)", () => {
     const text = renderParadeState(
       coy([subunit("PLATOON 1", [camp("A", present("A", 2), false)])], [duty("RF", "PTE R", "A", "300926", "300926")]),
       EXAMPLE_CAA,
     );
-    expect(text).toContain("• Present strength: 1\n");
+    expect(text).toContain("PLATOON 1: 00/02");
+    expect(text).toContain("• Present strength: 0\n");
     expect(text).toContain("• Present Strength: 00\n• Off Shift: 02\n");
-    expect(text).not.toContain("RF: 01");
+  });
+
+  it("SOL counts under the on-shift team of the same camp, and only while their own team is off", () => {
+    const sftA = camp("SFT A", [...present("A", 2)], false);
+    const sftB = camp("SFT B", present("B", 3), true);
+    const sol = { ...duty("SOL", "PTE X", "SFT A", "300926", "051026"), personId: sftA.people[0].id };
+    let text = renderParadeState(coy([subunit("PLATOON 1", [sftA, sftB])], [sol]), EXAMPLE_CAA);
+    expect(text).toContain("SFT B\n• Total Strength: 03\n• Present Strength: 03 + 01 SOL\n");
+    expect(text).toContain("Serving SOL: 01\n\n1. PTE X (300926 - 051026)\n");
+    expect(text).toContain("PLATOON 1: 04/05");
+
+    // their team mounts: present at home, not SOL anywhere
+    sftA.onShift = true;
+    sftB.onShift = false;
+    text = renderParadeState(coy([subunit("PLATOON 1", [sftA, sftB])], [sol]), EXAMPLE_CAA);
+    expect(text).not.toContain("SOL");
+    expect(text).toContain("PLATOON 1: 02/05");
   });
 
   it("HQ does not count extras but still lists them", () => {

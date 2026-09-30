@@ -44,10 +44,11 @@ export async function loadSnapshot(coyRow: CoyRow): Promise<CoySnapshot> {
   ]);
 
   const openAbsence = new Map(absences.map(({ a }) => [a.personId, a]));
+  const activePeople = new Set(people.map(({ p }) => p.id));
   const campsBySubunit = new Map<string, SnapshotCamp[]>();
   const campById = new Map<string, SnapshotCamp>();
   for (const c of camps) {
-    const sc: SnapshotCamp = { id: c.id, name: c.name, onShift: c.onShift, people: [] };
+    const sc: SnapshotCamp = { id: c.id, name: c.name, post: c.post ?? c.name, onShift: c.onShift, people: [] };
     campById.set(c.id, sc);
     campsBySubunit.set(c.subunitId, [...(campsBySubunit.get(c.subunitId) ?? []), sc]);
   }
@@ -86,6 +87,8 @@ export async function loadSnapshot(coyRow: CoyRow): Promise<CoySnapshot> {
         type: d.type,
         rank: d.rank,
         name: d.name,
+        // a removed person's SOL falls back to its stored camp
+        personId: d.personId && activePeople.has(d.personId) ? d.personId : null,
         campId: d.campId,
         startDate: d.startDate,
         startTime: d.startTime,

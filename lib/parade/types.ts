@@ -7,8 +7,9 @@
 export const ABSENCE_TYPES = ["HL", "MC", "OL", "AL", "OFF", "MA", "OTHERS"] as const;
 export type AbsenceType = (typeof ABSENCE_TYPES)[number];
 
-// These must carry both START and END dates (MA and OTHERS are exempt, as in the bot).
-export const DATED_ABSENCE_TYPES: readonly AbsenceType[] = ["HL", "MC", "OL", "AL", "OFF"];
+// These must carry both START and END dates. Only MA is exempt (it is for one
+// day, with a timing). OTHERS needs dates too — stricter than the bot.
+export const DATED_ABSENCE_TYPES: readonly AbsenceType[] = ["HL", "MC", "OL", "AL", "OFF", "OTHERS"];
 
 export const DUTY_TYPES = ["EXTRA", "RF", "SOL"] as const;
 export type DutyType = (typeof DUTY_TYPES)[number];
@@ -37,6 +38,11 @@ export interface SnapshotPerson {
 export interface SnapshotCamp {
   id: string;
   name: string;
+  /**
+   * The physical camp this team belongs to. Teams of one physical camp
+   * (e.g. "SFT A" and "SFT B", post "SFT") take turns on shift.
+   */
+  post: string;
   onShift: boolean;
   /** roster order */
   people: SnapshotPerson[];
@@ -55,6 +61,13 @@ export interface SnapshotDuty {
   type: DutyType;
   rank: string;
   name: string;
+  /** the roster person serving it, if they're in this coy */
+  personId: string | null;
+  /**
+   * EXTRA/RF: the camp they serve at.
+   * SOL with a personId: their HOME camp — where it counts is worked out from
+   * the shifts (see servingCampId). SOL without a personId: fixed camp (legacy import).
+   */
   campId: string;
   startDate: string | null;
   startTime: string | null;
@@ -85,6 +98,7 @@ export type IssueCode =
   | "overdue-absence"
   | "overdue-duty"
   | "duty-missing-dates"
+  | "double-counted"
   | "hq-camp-count"
   | "empty-camp";
 

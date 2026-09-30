@@ -2,16 +2,22 @@
 // bot's ErrorCollector. Same principle: collect EVERY problem in one pass, and
 // if there are any, no parade state is produced.
 //
+// Only what gets PRINTED or COUNTED is checked. An off-shift camp shows as
+// 00 present with no names, so its people are not checked at all: a stale MC
+// in a dismounted team must not block the parade state.
+//
 // The bot's sheet-structure checks (tab names, headers, links, orphan tabs,
 // stale Shifts rows, onshift values, duplicate names) are gone: the schema and
-// forms make those states impossible. What's left is data a person can forget.
+// forms make those states impossible.
 
+import { indexCamps, servingCampId } from "./compute";
 import { caaKey, ddmmyy, endKey, type SgtParts } from "./time";
 import { DATED_ABSENCE_TYPES, type CoySnapshot, type Issue } from "./types";
 
 export function validate(snapshot: CoySnapshot, caa: SgtParts): Issue[] {
   const issues: Issue[] = [];
   const now = caaKey(caa);
+  const idx = indexCamps(snapshot);
   const campScope = new Map<string, string[]>();
 
   for (const subunit of snapshot.subunits) {
@@ -37,13 +43,15 @@ export function validate(snapshot: CoySnapshot, caa: SgtParts): Issue[] {
         });
       }
 
+      if (!camp.onShift) continue; // nothing about its people is printed
+
       for (const person of camp.people) {
         const target = { kind: "person", campId: camp.id, personId: person.id } as const;
         const add = (code: Issue["code"], message: string) =>
           issues.push({ code, scope, message: `'${person.name}': ${message}`, target });
 
-        // checked for everyone, including PRESENT: the rank prints the moment
-        // they become an absentee
+        // checked for everyone on shift, including PRESENT: the rank prints
+        // the moment they become an absentee
         if (person.rank.trim() === "") add("missing-rank", "missing RANK");
 
         const a = person.absence;
@@ -78,7 +86,10 @@ export function validate(snapshot: CoySnapshot, caa: SgtParts): Issue[] {
   }
 
   for (const duty of snapshot.duties) {
-    const scope = [...(campScope.get(duty.campId) ?? []), "Extra/RF/SOL"];
+    const at = servingCampId(duty, idx);
+    if (!at) continue; // not counted right now, so nothing about it is printed
+
+    const scope = [...(campScope.get(at) ?? []), "Extra/RF/SOL"];
     const target = { kind: "duty", dutyId: duty.id } as const;
     const who = `'${duty.rank} ${duty.name}' (${duty.type})`;
     if (duty.rank.trim() === "") {
@@ -93,6 +104,21 @@ export function validate(snapshot: CoySnapshot, caa: SgtParts): Issue[] {
         message: `${who}: ended ${ddmmyy(duty.endDate)} — remove them or extend it`,
         target,
       });
+    }
+
+    // Extra/RF away from an on-shift home team: they must be absent there,
+    // or they'd be counted in both places.
+    if (duty.personId && duty.type !== "SOL") {
+      const home = idx.homeOf.get(duty.personId);
+      const person = home?.people.find((p) => p.id === duty.personId);
+      if (home?.onShift && person && !person.absence) {
+        issues.push({
+          code: "double-counted",
+          scope,
+          message: `${who} is also counted present at ${home.name} — mark them absent there (${duty.type} @ ${idx.camps.get(at)?.name})`,
+          target: { kind: "person", campId: home.id, personId: person.id },
+        });
+      }
     }
   }
 

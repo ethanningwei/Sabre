@@ -1,10 +1,10 @@
 "use server";
 
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { actionViewer, assertCanEditCamp, assertCanEditPerson } from "@/lib/authz";
 import { db } from "@/lib/db";
-import { absence, camp } from "@/lib/db/schema";
+import { absence, camp, person } from "@/lib/db/schema";
 import { ABSENCE_TYPES, DATED_ABSENCE_TYPES } from "@/lib/parade";
 import { audit, run, UserError, zDate, zTime } from "./shared";
 
@@ -33,10 +33,20 @@ export async function setStatus(raw: StatusInput) {
     const input = statusInput.parse(raw);
     for (const id of input.personIds) await assertCanEditPerson(viewer, id);
 
+    // an off-shift team isn't printed or counted, so its attendance is locked
+    const offShift = await db
+      .selectDistinct({ name: camp.name })
+      .from(person)
+      .innerJoin(camp, eq(camp.id, person.campId))
+      .where(and(inArray(person.id, input.personIds), eq(camp.onShift, false)));
+    if (offShift.length) {
+      throw new UserError(`${offShift.map((c) => c.name).join(", ")} is off shift. Put it on shift to update attendance.`);
+    }
+
     const { status } = input;
     if (status !== "PRESENT") {
       if (DATED_ABSENCE_TYPES.includes(status) && (!input.startDate || !input.endDate)) {
-        throw new UserError(`${status} needs a start and end date.`);
+        throw new UserError(`${status === "OTHERS" ? "Others" : status} needs a start and end date.`);
       }
       if (status === "MA" && !input.maTiming.trim()) throw new UserError("MA needs a timing, e.g. 1300.");
       if (status === "OTHERS" && !input.otherReason.trim()) throw new UserError("Please give the reason.");
