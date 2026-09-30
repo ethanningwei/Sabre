@@ -46,3 +46,5 @@ credentials.json
 sabre-export.json
 /data/private/
 __pycache__/
+
+!.env.example
